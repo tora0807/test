@@ -33,8 +33,8 @@ st.info(f'🔢 10進数の「{number}」を2進数で表現すると「{binary_r
 
 
 
-min_val=st.number_input(value=0)
-max_val=st.number_input(value=10)
+min_val=st.number_input("a",value=0)
+max_val=st.number_input("i",value=10)
 
 
 if st.button("乱数を生成"):
