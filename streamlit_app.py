@@ -1,42 +1,56 @@
-# Streamlitライブラリをインポート
 import streamlit as st
 import random
+from datetime import datetime
 
-# ページ設定（タブに表示されるタイトル、表示幅）
-st.set_page_config(page_title="タイトル", layout="wide")
+# ページ設定
+st.set_page_config(
+    page_title="今日の運勢占い",
+    page_icon="🔮"
+)
 
-# タイトルを設定
-st.title('らら')
+# タイトル
+st.title("🔮 今日の運勢占い")
 
-# テキスト入力ボックスを作成し、ユーザーからの入力を受け取る
-user_input = st.text_input('あなたの名前を入力してください')
+# 現在の日付を表示
+st.write(f"今日の日付: {datetime.now().strftime('%Y年%m月%d日')}")
 
-# ボタンを作成し、クリックされたらメッセージを表示
-if st.button('挨拶する'):
-    if user_input:  # 名前が入力されているかチェック
-        st.success(f'🌟 こんにちは、{user_input}さん! 🌟')  # メッセージをハイライト
+# 運勢のリスト
+fortunes = [
+    {"運勢": "大吉", "説明": "絶好調！思い切った行動が吉となるでしょう。", "ラッキーカラー": "赤", "ラッキーナンバー": random.randint(1, 9)},
+    {"運勢": "中吉", "説明": "良い一日になりそう。新しいことに挑戦するのも良いでしょう。", "ラッキーカラー": "青", "ラッキーナンバー": random.randint(1, 9)},
+    {"運勢": "小吉", "説明": "穏やかな一日。無理せず着実に進めましょう。", "ラッキーカラー": "緑", "ラッキーナンバー": random.randint(1, 9)},
+    {"運勢": "末吉", "説明": "普通の一日。慎重に行動すれば良い結果につながります。", "ラッキーカラー": "黄", "ラッキーナンバー": random.randint(1, 9)},
+    {"運勢": "凶", "説明": "少し注意が必要。落ち着いて行動しましょう。", "ラッキーカラー": "紫", "ラッキーナンバー": random.randint(1, 9)}
+]
+
+# 名前入力
+name = st.text_input("あなたの名前を入力してください")
+
+# 占うボタン
+if st.button("運勢を占う"):
+    if name:
+        st.write(f"---\n{name}さんの今日の運勢は...")
+        
+        # アニメーション効果
+        with st.spinner("占い中..."):
+            import time
+            time.sleep(1)
+        
+        # ランダムに運勢を選択
+        fortune = random.choice(fortunes)
+        
+        # 結果表示
+        st.header(f"【{fortune['運勢']}】")
+        st.write(f"✨ {fortune['説明']}")
+        st.write(f"🎨 ラッキーカラー: {fortune['ラッキーカラー']}")
+        st.write(f"🔢 ラッキーナンバー: {fortune['ラッキーナンバー']}")
+        
+        # 運勢に応じたアドバイス表示
+        if fortune['運勢'] in ['大吉', '中吉']:
+            st.success("今日は積極的に行動するといいでしょう！")
+        elif fortune['運勢'] in ['小吉', '末吉']:
+            st.info("無理せず、着実に進めていきましょう。")
+        else:
+            st.warning("今日は慎重に行動することをおすすめします。")
     else:
-        st.error('名前を入力してください。')  # エラーメッセージを表示
-
-# スライダーを作成し、値を選択
-number = st.slider('好きな数字（10進数）を選んでください', 0, 100)
-
-# 補足メッセージ
-st.caption("十字キー（左右）でも調整できます。")
-
-# 選択した数字を表示
-st.write(f'あなたが選んだ数字は「{number}」です。')
-
-# 選択した数値を2進数に変換
-binary_representation = bin(number)[2:]  # 'bin'関数で2進数に変換し、先頭の'0b'を取り除く
-st.info(f'🔢 10進数の「{number}」を2進数で表現すると「{binary_representation}」になります。 🔢')  # 2進数の表示をハイライト
-
-
-
-min_val=st.number_input("a",value=0)
-max_val=st.number_input("i",value=10)
-
-
-if st.button("乱数を生成"):
-    random_num=random.randint(min_val,max_val)
-    st.write(f'生成された乱数：{random_num}')
+        st.error("名前を入力してください！")
