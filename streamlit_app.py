@@ -1,20 +1,19 @@
-# streamlit_template
 import streamlit as st
+import random
 
-st.title("あいうえお")
+# 占いの結果のリスト
+fortune_results = [
+    "今日は素晴らしい一日になりそうです！積極的に行動しましょう。",
+    "少しの努力で大きな成果が期待できる日です。自信を持って進んでください。",
+    "少しストレスを感じるかもしれませんが、冷静に対応すれば問題なし。",
+    "今日はリラックスして過ごすことが吉です。無理せず休息を取ると良いでしょう。",
+    "人とのコミュニケーションがカギになります。新しい出会いに期待大！"
+]
 
-st.write("aiueo")
+# アプリのタイトル
+st.title("ランダム占いアプリ")
 
-user_name=st.text_input("名前を入力してください")
-
-st.header("あなたの名前は"+str(user_name)+"です")
-
-h=st.number_input("身長を入力してください(m)",value=1.70)
-w=st.number_input("体重を入力してください（kg)",value=70)
-
-bmi=w/(h**2)
-
-dbmi=round(bmi,2)
-
-st.header("あなたのBMIは"+str(dbmi)+"です")
-
+# 占いボタン
+if st.button('占ってみる'):
+    result = random.choice(fortune_results)
+    st.write(result)
