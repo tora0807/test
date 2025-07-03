@@ -2,7 +2,6 @@ import streamlit as st
 import random
 import pandas as pd
 
-# Excelファイルから問題を読み込む関数
 @st.cache_data
 def load_questions_from_excel(file_path):
     df = pd.read_excel(file_path)
@@ -15,10 +14,8 @@ def load_questions_from_excel(file_path):
         })
     return questions
 
-# アプリのタイトル
 st.title('医学クイズアプリ')
 
-# ユーザー名を入力してもらう
 user_name = st.text_input("あなたの名前を教えてください:")
 
 if user_name:
@@ -30,23 +27,42 @@ if user_name:
         st.error(f"問題の読み込みに失敗しました: {e}")
         st.stop()
 
-    # 問題をランダムにシャッフルして1問選択
-    question = random.choice(questions)
+    # セッションステート初期化
+    if "question" not in st.session_state:
+        st.session_state.question = random.choice(questions)
+        st.session_state.answered = False
+        st.session_state.selected_option = None
 
-    # 問題を表示
-    st.subheader(question['question'])
+    if not st.session_state.answered:
+        # 回答前は選択肢活性化
+        selected = st.radio(
+            "選んでください:",
+            st.session_state.question['options'],
+            index=0,
+            key="option_select"
+        )
+        if st.button("回答"):
+            st.session_state.selected_option = selected
+            st.session_state.answered = True
+            # 強制的に再レンダリングさせるため、状態変化は即反映
 
-    # ラジオボタンで選択肢を表示
-    answer = st.radio(
-        "選んでください:",
-        question['options']
-    )
-
-    # 回答ボタン
-    if st.button("回答"):
-        if answer == question['answer']:
+    else:
+        # 回答後は選択肢非活性＆結果表示
+        st.radio(
+            "選んでください:",
+            st.session_state.question['options'],
+            index=st.session_state.question['options'].index(st.session_state.selected_option),
+            disabled=True
+        )
+        if st.session_state.selected_option == st.session_state.question['answer']:
             st.success("正解です！🎉")
         else:
-            st.error(f"残念！正解は「{question['answer']}」です。")
+            st.error(f"残念！正解は「{st.session_state.question['answer']}」です。")
+
+        if st.button("次の問題へ"):
+            st.session_state.question = random.choice(questions)
+            st.session_state.answered = False
+            st.session_state.selected_option = None
+
 else:
     st.write("名前を入力して、クイズを開始してください！")
