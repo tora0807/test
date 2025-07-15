@@ -1,74 +1,78 @@
 import streamlit as st
-import random
 import pandas as pd
+import random
 
-# Excelからクイズ問題を読み込む
+st.set_page_config(page_title="Excel問題シャッフラー", page_icon="📊")
+
+st.title("📊 Excel問題シャッフラー")
+
+# ----------------------------
+# Excelファイルの読み込み関数
+# ----------------------------
 @st.cache_data
-def load_questions_from_excel(file_path):
+def load_questions(file_path):
     df = pd.read_excel(file_path)
-    questions = []
-    for _, row in df.iterrows():
-        questions.append({
-            "question": row["問題文"],
-            "options": [row["①"], row["②"], row["③"], row["④"]],
-            "answer": row["正解"]
-        })
-    return questions
+    return df.sample(frac=1, random_state=random.randint(0, 9999)).reset_index(drop=True)  # 毎回ランダム順
 
-# タイトル
-st.title('医学クイズアプリ')
+# ----------------------------
+# ファイル読み込み
+# ----------------------------
+try:
+    questions_df = load_questions("問題集.xlsx")
+except Exception as e:
+    st.error(f"Excelファイルの読み込みに失敗しました: {e}")
+    st.stop()
 
-# ユーザー名の入力
-user_name = st.text_input("あなたの名前を教えてください:")
+# ----------------------------
+# セッションの初期化
+# ----------------------------
+if "current_index" not in st.session_state:
+    st.session_state.current_index = 0
+if "score" not in st.session_state:
+    st.session_state.score = 0
 
-if user_name:
-    st.write(f"こんにちは、{user_name}さん！クイズを始めましょう！")
+# ----------------------------
+# 問題の表示
+# ----------------------------
+index = st.session_state.current_index
 
-    try:
-        questions = load_questions_from_excel("問題集.xlsx")
-    except Exception as e:
-        st.error(f"問題の読み込みに失敗しました: {e}")
-        st.stop()
+if index < len(questions_df):
+    question = questions_df.iloc[index]
 
-    # セッションステートの初期化
-    if "question_index" not in st.session_state:
-        st.session_state.question_index = random.randint(0, len(questions) - 1)
-        st.session_state.answered = False
-        st.session_state.selected_option = None
+    st.markdown(f"### 問題 {int(question['番号'])}")
+    st.write(f"**{question['問題文']}**")
 
-    # 現在の問題
-    current_question = questions[st.session_state.question_index]
+    choices = {
+        "①": question["①"],
+        "②": question["②"],
+        "③": question["③"],
+        "④": question["④"],
+    }
 
-    # 問題文表示
-    st.subheader(current_question["question"])
+    # 選択肢をシャッフルして表示
+    shuffled_items = list(choices.items())
+    random.shuffle(shuffled_items)
 
-    # 選択肢表示（常に同じkeyを使用）
-    selected = st.radio(
-        "選んでください:",
-        current_question["options"],
-        index=0,
-        key="radio_choice",
-        disabled=st.session_state.answered  # 回答後は無効
-    )
+    selected = st.radio("選択肢を選んでください：", options=[f"{k}: {v}" for k, v in shuffled_items])
 
-    # 回答前のボタン表示
-    if not st.session_state.answered:
-        if st.button("回答"):
-            st.session_state.selected_option = selected
-            st.session_state.answered = True
-            st.experimental_rerun()  # 状態更新後に再レンダリング
+    if st.button("解答する"):
+        selected_label = selected.split(":")[0]
+        correct_label = question["正解"]
 
-    # 回答後のフィードバック
-    if st.session_state.answered:
-        if st.session_state.selected_option == current_question["answer"]:
-            st.success("正解です！🎉")
+        if selected_label == correct_label:
+            st.success("✅ 正解！")
+            st.session_state.score += 1
         else:
-            st.error(f"残念！正解は「{current_question['answer']}」です。")
+            correct_text = choices[correct_label]
+            st.error(f"❌ 不正解！ 正解は「{correct_label}: {correct_text}」です。")
 
-        if st.button("次の問題へ"):
-            st.session_state.question_index = random.randint(0, len(questions) - 1)
-            st.session_state.answered = False
-            st.session_state.selected_option = None
-            st.experimental_rerun()
+        st.session_state.current_index += 1
+        st.experimental_rerun()
 else:
-    st.write("名前を入力して、クイズを開始してください！")
+    st.markdown("### ✅ 全ての問題が終了しました。")
+    st.markdown(f"**スコア: {st.session_state.score} / {len(questions_df)}**")
+
+    if st.button("もう一度挑戦する"):
+        st.session_state.current_index = 0
+        st.session_state.score = 0
+        st.experimental_rerun()
