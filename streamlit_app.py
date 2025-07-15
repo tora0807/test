@@ -67,7 +67,7 @@ if index < len(questions_df):
             st.error(f"❌ 不正解！ 正解は「{correct_label}: {correct_text}」です。")
 
         st.session_state.current_index += 1
-        st.experimental_rerun()
+        st.rerun()
 else:
     st.markdown("### ✅ 全ての問題が終了しました。")
     st.markdown(f"**スコア: {st.session_state.score} / {len(questions_df)}**")
@@ -75,4 +75,4 @@ else:
     if st.button("もう一度挑戦する"):
         st.session_state.current_index = 0
         st.session_state.score = 0
-        st.experimental_rerun()
+        st.rerun()
