@@ -55,9 +55,15 @@ if index < len(questions_df):
 
     selected = st.radio("選択肢を選んでください：", options=[f"{k}: {v}" for k, v in shuffled_items])
 
+    # デバッグ用：選択された値を表示
+    st.write(f"選択された選択肢: {selected}")
+
     if st.button("解答する"):
         selected_label = selected.split(":")[0]
         correct_label = question["正解"]
+
+        # デバッグ用：正解を表示
+        st.write(f"正解ラベル: {correct_label}")
 
         if selected_label == correct_label:
             st.success("✅ 正解！")
@@ -67,7 +73,7 @@ if index < len(questions_df):
             st.error(f"❌ 不正解！ 正解は「{correct_label}: {correct_text}」です。")
 
         st.session_state.current_index += 1
-        st.rerun()
+        st.rerun()  # 状態をリセットして再実行
 else:
     st.markdown("### ✅ 全ての問題が終了しました。")
     st.markdown(f"**スコア: {st.session_state.score} / {len(questions_df)}**")
@@ -75,4 +81,4 @@ else:
     if st.button("もう一度挑戦する"):
         st.session_state.current_index = 0
         st.session_state.score = 0
-        st.rerun()
+        st.rerun()  # 状態をリセットして再実行
