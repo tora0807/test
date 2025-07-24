@@ -1,38 +1,26 @@
 import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
 
-# 医学クイズのリスト
-questions = [
-    {"question": "正常な成人の呼吸数は？", "answer": "12〜20回/分"},
-    {"question": "低血糖の初期症状は？", "answer": "発汗、手の震え、動悸など"},
-    {"question": "心筋梗塞の代表的な症状は？", "answer": "胸痛（圧迫感、締め付けられるような痛み）"}
-]
+st.title("🧠 忘却曲線グラフ（医学クイズ復習用）")
 
-# セッション状態の初期化
-if "question_index" not in st.session_state:
-    st.session_state.question_index = 0
-if "show_answer" not in st.session_state:
-    st.session_state.show_answer = False
-if "user_answer" not in st.session_state:
-    st.session_state.user_answer = ""
+# 時間（時間単位）
+time_hours = np.array([0, 0.33, 1, 24, 168, 720])  # 分, 1時間, 1日, 1週間, 1ヶ月
+labels = ["直後", "20分後", "1時間後", "1日後", "1週間後", "1か月後"]
 
-# 現在の問題
-q = questions[st.session_state.question_index]
+# 忘却曲線：指数関数（目安）
+def forgetting_curve(t):
+    return 100 * np.exp(-0.15 * t)  # 仮の減衰係数
 
-# 表示：問題番号と内容
-st.write(f"### 問題 {st.session_state.question_index + 1}")
-st.write(q["question"])
+retention = forgetting_curve(time_hours)
 
-# 回答欄（ユーザー入力）
-user_input = st.text_input("あなたの解答を入力してください：", value=st.session_state.user_answer)
-
-# 「解答する」ボタン
-if not st.session_state.show_answer:
-    if st.button("解答する"):
-        st.session_state.user_answer = user_input  # 回答を保存
-        st.session_state.show_answer = True
-else:
-    # 表示：ユーザーの回答と正解
-    st.info(f"あなたの回答：{st.session_state.user_answer}")
-    st.success(f"正解：{q['answer']}")
-
-    # 「次の
+# グラフ描画
+fig, ax = plt.subplots()
+ax.plot(time_hours, retention, marker="o")
+ax.set_title("エビングハウスの忘却曲線")
+ax.set_xlabel("経過時間（時間）")
+ax.set_ylabel("記憶保持率（%）")
+ax.set_xticks(time_hours)
+ax.set_xticklabels(labels)
+ax.set_ylim(0, 100)
+ax.grid(T
