@@ -1,26 +1,63 @@
 import streamlit as st
-import numpy as np
-import matplotlib.pyplot as plt
 
-st.title("🧠 忘却曲線グラフ（医学クイズ復習用）")
+# 医学クイズ（選択肢形式）
+questions = [
+    {
+        "question": "正常な成人の脈拍数は？",
+        "options": ["40〜60回/分", "60〜100回/分", "100〜120回/分", "120〜140回/分"],
+        "answer": "60〜100回/分"
+    },
+    {
+        "question": "血圧が高い状態を何という？",
+        "options": ["低血圧", "正常血圧", "高血圧", "貧血"],
+        "answer": "高血圧"
+    }
+]
 
-# 時間（時間単位）
-time_hours = np.array([0, 0.33, 1, 24, 168, 720])  # 分, 1時間, 1日, 1週間, 1ヶ月
-labels = ["直後", "20分後", "1時間後", "1日後", "1週間後", "1か月後"]
+# 状態管理
+if "question_index" not in st.session_state:
+    st.session_state.question_index = 0
+if "answered" not in st.session_state:
+    st.session_state.answered = False
+if "selected_option" not in st.session_state:
+    st.session_state.selected_option = None
 
-# 忘却曲線：指数関数（目安）
-def forgetting_curve(t):
-    return 100 * np.exp(-0.15 * t)  # 仮の減衰係数
+# 現在の問題
+q = questions[st.session_state.question_index]
 
-retention = forgetting_curve(time_hours)
+# 問題の表示
+st.write(f"### 問題 {st.session_state.question_index + 1}")
+st.write(q["question"])
 
-# グラフ描画
-fig, ax = plt.subplots()
-ax.plot(time_hours, retention, marker="o")
-ax.set_title("エビングハウスの忘却曲線")
-ax.set_xlabel("経過時間（時間）")
-ax.set_ylabel("記憶保持率（%）")
-ax.set_xticks(time_hours)
-ax.set_xticklabels(labels)
-ax.set_ylim(0, 100)
-ax.grid(T
+# 選択肢の表示（ラジオボタン）
+st.session_state.selected_option = st.radio(
+    "選択肢を選んでください：",
+    q["options"],
+    index=0
+)
+
+# 解答ボタン
+if not st.session_state.answered:
+    if st.button("解答する"):
+        st.session_state.answered = True
+
+# 解答表示
+if st.session_state.answered:
+    # ユーザーの選択と正解の表示
+    st.write(f"### あなたの選択：{st.session_state.selected_option}")
+    st.write(f"### 正解：{q['answer']}")
+
+    # 正誤判定
+    if st.session_state.selected_option == q["answer"]:
+        st.write("✅ 正解です！")
+    else:
+        st.write("❌ 不正解です。")
+
+    # 次の問題へ進むボタン
+    if st.button("次の問題へ"):
+        if st.session_state.question_index < len(questions) - 1:
+            st.session_state.question_index += 1
+            st.session_state.answered = False
+            st.session_state.selected_option = None
+        else:
+            st.info("全ての問題が終了しました。お疲れさまでした！")
