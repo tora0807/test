@@ -1,26 +1,37 @@
 import streamlit as st
 
-# セッション状態の初期化
-if 'current_question' not in st.session_state:
-    st.session_state.current_question = 0
-if 'answered' not in st.session_state:
-    st.session_state.answered = False
+# 医学クイズのリスト
+questions = [
+    {"question": "正常な成人の呼吸数は？", "answer": "12〜20回/分"},
+    {"question": "低血糖の初期症状は？", "answer": "発汗、手の震え、動悸など"},
+    {"question": "心筋梗塞の代表的な症状は？", "answer": "胸痛（圧迫感、締め付けられるような痛み）"}
+]
+
+# 初期化（最初だけ実行）
+if "question_index" not in st.session_state:
+    st.session_state.question_index = 0
+if "show_answer" not in st.session_state:
+    st.session_state.show_answer = False
+
+# 現在の問題
+q = questions[st.session_state.question_index]
 
 # 問題表示
-st.write(f"問題 {st.session_state.current_question + 1}")
+st.write(f"### 問題 {st.session_state.question_index + 1}")
+st.write(q["question"])
 
-# 解答が選択されていない場合のみ選択肢を表示
-if not st.session_state.answered:
-    answer = st.radio("選択してください", ["選択肢1", "選択肢2", "選択肢3"])
-    
-    if st.button("解答"):
-        st.session_state.answered = True
-        # 解答の処理
-        st.write(f"あなたの解答: {answer}")
+# 解答ボタン
+if not st.session_state.show_answer:
+    if st.button("解答する"):
+        st.session_state.show_answer = True
+else:
+    # 解答表示
+    st.success(f"答え：{q['answer']}")
 
-# 次の問題ボタンは解答後のみ表示
-if st.session_state.answered:
-    if st.button("次の問題"):
-        st.session_state.current_question += 1
-        st.session_state.answered = False
-        st.rerun()
+    # 次の問題へ進む
+    if st.button("次の問題へ"):
+        if st.session_state.question_index < len(questions) - 1:
+            st.session_state.question_index += 1
+            st.session_state.show_answer = False  # 解答表示フラグをリセット
+        else:
+            st.info("全ての問題が終了しました。お疲れさまでした！")
