@@ -1,84 +1,56 @@
 import streamlit as st
 import pandas as pd
-import random
 
-st.set_page_config(page_title="Excel問題シャッフラー", page_icon="📊")
-
-st.title("📊 Excel問題シャッフラー")
-
-# ----------------------------
-# Excelファイルの読み込み関数
-# ----------------------------
+# === 問題データ読み込み ===
 @st.cache_data
-def load_questions(file_path):
-    df = pd.read_excel(file_path)
-    return df.sample(frac=1, random_state=random.randint(0, 9999)).reset_index(drop=True)  # 毎回ランダム順
+def load_questions():
+    return pd.read_excel("問題集.xlsx")
 
-# ----------------------------
-# ファイル読み込み
-# ----------------------------
-try:
-    questions_df = load_questions("問題集.xlsx")
-except Exception as e:
-    st.error(f"Excelファイルの読み込みに失敗しました: {e}")
-    st.stop()
+df = load_questions()
 
-# ----------------------------
-# セッションの初期化
-# ----------------------------
-if "current_index" not in st.session_state:
-    st.session_state.current_index = 0
-if "score" not in st.session_state:
-    st.session_state.score = 0
+# === セッション状態 ===
+if "q_num" not in st.session_state:
+    st.session_state.q_num = 0
+if "user_answer" not in st.session_state:
+    st.session_state.user_answer = None
+if "answered" not in st.session_state:
+    st.session_state.answered = False
 
-# ----------------------------
-# 問題の表示
-# ----------------------------
-index = st.session_state.current_index
+# === 現在の問題 ===
+if st.session_state.q_num < len(df):
+    current = df.iloc[st.session_state.q_num]
+    st.title("📘 Excel 学習問題（1問ずつ選択・解説付き）")
+    st.subheader(f"問題 {int(current['番号'])} / {len(df)}")
+    st.write(current["問題文"])
 
-if index < len(questions_df):
-    question = questions_df.iloc[index]
+    # 選択肢をラジオボタンで表示
+    choices = ["①", "②", "③", "④"]
+    options = [f"{c}: {current[c]}" for c in choices]
+    user_choice = st.radio("選択肢を選んでください：", options, index=None)
 
-    st.markdown(f"### 問題 {int(question['番号'])}")
-    st.write(f"**{question['問題文']}**")
-
-    choices = {
-        "①": question["①"],
-        "②": question["②"],
-        "③": question["③"],
-        "④": question["④"],
-    }
-
-    # 選択肢をシャッフルして表示
-    shuffled_items = list(choices.items())
-    random.shuffle(shuffled_items)
-
-    selected = st.radio("選択肢を選んでください：", options=[f"{k}: {v}" for k, v in shuffled_items])
-
-    # デバッグ用：選択された値を表示
-    st.write(f"選択された選択肢: {selected}")
-
+    # 回答ボタン
     if st.button("解答する"):
-        selected_label = selected.split(":")[0]
-        correct_label = question["正解"]
-
-        # デバッグ用：正解を表示
-        st.write(f"正解ラベル: {correct_label}")
-
-        if selected_label == correct_label:
-            st.success("✅ 正解！")
-            st.session_state.score += 1
+        if user_choice:
+            st.session_state.user_answer = user_choice.split(":")[0]
+            st.session_state.answered = True
         else:
-            correct_text = choices[correct_label]
-            st.error(f"❌ 不正解！ 正解は「{correct_label}: {correct_text}」です。")
+            st.warning("選択肢を選んでから解答してください。")
 
-        st.session_state.current_index += 1
-        st.rerun()  # 状態をリセットして再実行
+    # 解答後の表示
+    if st.session_state.answered:
+        correct = current["正解"]
+        if st.session_state.user_answer == correct:
+            st.success(f"✅ 正解です！({correct}: {current[correct]})")
+        else:
+            st.error(f"❌ 不正解です。正解は {correct}: {current[correct]} です。")
+        # 解説表示（あれば）
+        if "解説" in current and pd.notna(current["解説"]):
+            st.info(f"📖 解説：{current['解説']}")
+
+        # 次の問題へボタン
+        if st.button("➡️ 次の問題へ"):
+            st.session_state.q_num += 1
+            st.session_state.user_answer = None
+            st.session_state.answered = False
 else:
-    st.markdown("### ✅ 全ての問題が終了しました。")
-    st.markdown(f"**スコア: {st.session_state.score} / {len(questions_df)}**")
-
-    if st.button("もう一度挑戦する"):
-        st.session_state.current_index = 0
-        st.session_state.score = 0
-        st.rerun()  # 状態をリセットして再実行
+    st.success("🎉 すべての問題が完了しました！")
