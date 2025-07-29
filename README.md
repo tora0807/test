@@ -25,4 +25,32 @@ if st.session_state.q_num < len(df):
 
     # 選択肢をラジオボタンで表示
     choices = ["①", "②", "③", "④"]
-    opt
+    options = [f"{c}: {current[c]}" for c in choices]
+    user_choice = st.radio("選択肢を選んでください：", options, index=None)
+
+    # 回答ボタン
+    if st.button("解答する"):
+        if user_choice:
+            st.session_state.user_answer = user_choice.split(":")[0]
+            st.session_state.answered = True
+        else:
+            st.warning("選択肢を選んでから解答してください。")
+
+    # 解答後の表示
+    if st.session_state.answered:
+        correct = current["正解"]
+        if st.session_state.user_answer == correct:
+            st.success(f"✅ 正解です！({correct}: {current[correct]})")
+        else:
+            st.error(f"❌ 不正解です。正解は {correct}: {current[correct]} です。")
+        # 解説表示（あれば）
+        if "解説" in current and pd.notna(current["解説"]):
+            st.info(f"📖 解説：{current['解説']}")
+
+        # 次の問題へボタン
+        if st.button("➡️ 次の問題へ"):
+            st.session_state.q_num += 1
+            st.session_state.user_answer = None
+            st.session_state.answered = False
+else:
+    st.success("🎉 すべての問題が完了しました！")
