@@ -31,7 +31,7 @@ subset = df.iloc[start:end].reset_index(drop=True)
 if st.session_state.q_index < len(subset):
     current = subset.iloc[st.session_state.q_index]
 
-    st.title("📘 Excel 学習問題（10問ずつ）")
+    st.title("📘 Excel 医学知識クイズ）")
     st.markdown(f"**第 {st.session_state.set_index + 1} セット（{start + 1}〜{end} 問）**")
     st.subheader(f"問題 {int(current['番号'])}")
     st.write(current["問題文"])
