@@ -1,61 +1,48 @@
 import streamlit as st
+import pandas as pd
 
-# ==== 問題データ（100問に拡張可能） ====
-excel_questions = [
-    {
-        "number": 1,
-        "question": "Excelでセルに数式を入力するには、何の記号で始めますか？",
-        "answer": "=",
-        "explanation": "Excelでは、数式を入力する際に必ず「=」で始めます。"
-    },
-    {
-        "number": 2,
-        "question": "A1からA10の合計を求める関数は？",
-        "answer": "=SUM(A1:A10)",
-        "explanation": "SUM関数は指定した範囲の合計を計算する関数です。"
-    },
-    {
-        "number": 3,
-        "question": "IF関数の基本構文は？",
-        "answer": "=IF(条件, 真の場合, 偽の場合)",
-        "explanation": "IF関数は条件によって異なる値を返す関数です。"
-    },
-    # 必要に応じて以下に追加してください（最大100問）
-]
+# === Excelファイルから読み込み ===
+@st.cache_data
+def load_questions():
+    df = pd.read_excel("問題集.xlsx")
+    return df
 
-# ==== セッションの初期化 ====
+df = load_questions()
+
+# ==== セッション状態の初期化 ====
 if "q_num" not in st.session_state:
     st.session_state.q_num = 0
 if "show_answer" not in st.session_state:
     st.session_state.show_answer = False
-if "show_explanation" not in st.session_state:
-    st.session_state.show_explanation = False
 
-# ==== 現在の問題 ====
-current = excel_questions[st.session_state.q_num]
+# ==== 現在の問題取得 ====
+if st.session_state.q_num < len(df):
+    current = df.iloc[st.session_state.q_num]
+    
+    st.title("📘 Excel 学習問題（Excelファイルから読み取り）")
+    st.subheader(f"問題 {int(current['番号'])} / {len(df)}")
+    st.write(current["問題文"])
 
-st.title("📘 Excel 学習問題（1問ずつ出題）")
-st.subheader(f"問題 {current['number']} / {len(excel_questions)}")
-st.write(current["question"])
+    # ==== 選択肢 ====
+    choices = ["①", "②", "③", "④"]
+    for i, choice in enumerate(choices):
+        st.write(f"{choice}: {current[choice]}")
 
-# ==== ボタンで答え表示 ====
-if st.button("✅ 答えを見る"):
-    st.session_state.show_answer = True
-if st.session_state.show_answer:
-    st.success(f"答え：{current['answer']}")
+    # ==== 答え表示 ====
+    if st.button("✅ 正解を見る"):
+        st.session_state.show_answer = True
 
-# ==== ボタンで解説表示 ====
-if st.button("📖 解説を見る"):
-    st.session_state.show_explanation = True
-if st.session_state.show_explanation:
-    st.info(f"解説：{current['explanation']}")
+    if st.session_state.show_answer:
+        correct_choice = current["正解"]
+        correct_text = current[correct_choice]
+        st.success(f"正解は {correct_choice}：{correct_text}")
 
-# ==== 次の問題へ ====
-if st.button("➡️ 次の問題へ"):
-    if st.session_state.q_num < len(excel_questions) - 1:
-        st.session_state.q_num += 1
-        # 表示状態をリセット
-        st.session_state.show_answer = False
-        st.session_state.show_explanation = False
-    else:
-        st.success("全ての問題が終了しました！お疲れさまでした。")
+    # ==== 次の問題へ ====
+    if st.button("➡️ 次の問題へ"):
+        if st.session_state.q_num < len(df) - 1:
+            st.session_state.q_num += 1
+            st.session_state.show_answer = False
+        else:
+            st.success("すべての問題が終了しました！お疲れ様でした。")
+else:
+    st.success("すべての問題が終了しました！")
