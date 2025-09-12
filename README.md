@@ -52,5 +52,5 @@ if st.session_state.q_num < len(df):
             st.session_state.q_num += 1
             st.session_state.user_answer = None
             st.session_state.answered = False
-else:
+else：
     st.success("🎉 すべての問題が完了しました！")
