@@ -81,3 +81,12 @@ def quiz_app():
 
 if __name__ == "__main__":
     quiz_app()
+if st.button("回答する", key=f"answer_btn_{st.session_state.current_question}"):
+    if st.session_state.selected_option is None or st.session_state.selected_option == "":
+        st.warning("選択肢を選んでください。")
+    else:
+        st.session_state.answered = True
+        if st.session_state.selected_option == q["answer"]:
+            st.session_state.score += 1
+        # rerunはここだけに限定
+        st.experimental_rerun()
