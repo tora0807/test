@@ -5,14 +5,12 @@ st.title("🧠 医学知識クイズアプリ")
 st.markdown("全100問。10セットに分けて難易度別。4択クイズに挑戦しよう！")
 
 # --- 100問を10セットに分けたサンプル問題 ---
-# 実際はここに本物の医学知識問題を入れてください
 quiz_data = []
 difficulties = ["easy", "medium", "hard"]
 
 for set_num in range(1, 11):
     for i in range(1, 11):
         q_num = (set_num - 1) * 10 + i
-        # ランダムに難易度付与（実際は調整してください）
         difficulty = random.choice(difficulties)
         quiz_data.append({
             "set": set_num,
@@ -22,17 +20,27 @@ for set_num in range(1, 11):
             "answer": f"選択肢{random.choice(['A','B','C','D'])}-{q_num}"
         })
 
-# セット選択UI
 set_numbers = sorted(set(q["set"] for q in quiz_data))
 selected_set = st.selectbox("クイズセットを選んでください", set_numbers)
 
-# セッションステートの初期化
-if "prev_set" not in st.session_state or st.session_state.prev_set != selected_set:
-    # 選択セットの問題を抽出してシャッフル
-    filtered_questions = [q for q in quiz_data if q["set"] == selected_set]
-    random.seed(42)  # シード固定で順番固定
-    random.shuffle(filtered_questions)
+# --- セッションステート初期化 ---
+if "prev_set" not in st.session_state:
+    st.session_state.prev_set = None
+if "questions" not in st.session_state:
+    st.session_state.questions = []
+if "current_q" not in st.session_state:
+    st.session_state.current_q = 0
+if "score" not in st.session_state:
+    st.session_state.score = 0
+if "answered" not in st.session_state:
+    st.session_state.answered = False
+if "selected_option" not in st.session_state:
+    st.session_state.selected_option = None
 
+# --- セット変更時の問題セット切り替え（シャッフルしない） ---
+if st.session_state.prev_set != selected_set:
+    filtered_questions = [q for q in quiz_data if q["set"] == selected_set]
+    # シャッフルしないので順番そのままセット
     st.session_state.questions = filtered_questions
     st.session_state.current_q = 0
     st.session_state.score = 0
@@ -42,21 +50,14 @@ if "prev_set" not in st.session_state or st.session_state.prev_set != selected_s
 
 questions = st.session_state.questions
 
-# 現在の問題インデックスが範囲内かチェック
 if st.session_state.current_q < len(questions):
     q = questions[st.session_state.current_q]
 
     st.markdown(f"### Q{st.session_state.current_q + 1}: {q['question']}")
     st.markdown(f"難易度: **{q['difficulty'].capitalize()}**")
 
-    # 選択肢は一度シャッフルしてセッションに保存
-    key_opts = f"shuffled_options_{st.session_state.current_q}"
-    if key_opts not in st.session_state:
-        options = q["options"].copy()
-        random.shuffle(options)
-        st.session_state[key_opts] = options
-    else:
-        options = st.session_state[key_opts]
+    # 選択肢のシャッフルはしない
+    options = q["options"]
 
     st.session_state.selected_option = st.radio(
         "選択肢を選んでください：",
@@ -84,10 +85,9 @@ if st.session_state.current_q < len(questions):
             st.experimental_rerun()
 
 else:
-    # クイズ終了画面
     st.markdown("## 🎉 クイズ終了！")
     st.success(f"あなたの得点は **{st.session_state.score} / {len(questions)} 点** です")
 
     if st.button("別のセットを選ぶ"):
-        # セッションリセットはセット変更時に行うのでここではrerunだけ
+        # セット選択のUIに戻るためにrerunだけ
         st.experimental_rerun()
